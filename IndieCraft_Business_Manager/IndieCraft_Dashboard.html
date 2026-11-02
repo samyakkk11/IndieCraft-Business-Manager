@@ -1,0 +1,1154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>IndieCraft · Business Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#FBF7F0;
+    --surface:#FFFFFF;
+    --ink:#2A1E1A;
+    --ink-soft:#6B5B52;
+    --line:#ECE3D6;
+    --primary:#A8472E;      /* terracotta */
+    --primary-soft:#F4DDD2;
+    --accent:#3C6E47;       /* sage green */
+    --accent-soft:#DCE7DC;
+    --gold:#C8843A;         /* mustard */
+    --gold-soft:#F5E3C6;
+    --plum:#6B3A5B;         /* plum */
+    --plum-soft:#EBD9E3;
+    --danger:#B23A48;
+    --danger-soft:#F5D7DA;
+    --good:#3C6E47;
+    --shadow:0 1px 2px rgba(42,30,26,.04), 0 8px 24px rgba(42,30,26,.06);
+    --radius:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1320px;margin:0 auto;padding:28px 20px 80px}
+
+  /* Header */
+  header{
+    background:linear-gradient(135deg,#A8472E 0%, #8a3a25 100%);
+    color:#fff;
+    border-radius:var(--radius);
+    padding:28px 32px;
+    box-shadow:var(--shadow);
+    position:relative;
+    overflow:hidden;
+  }
+  header::after{
+    content:"";position:absolute;right:-60px;top:-60px;
+    width:240px;height:240px;border-radius:50%;
+    background:radial-gradient(circle,rgba(255,255,255,.12) 0%, transparent 70%);
+  }
+  header .eyebrow{font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.8;margin-bottom:6px}
+  header h1{font-size:30px;margin:0;font-weight:700;letter-spacing:-.3px}
+  header .sub{margin-top:6px;font-size:14px;opacity:.92}
+  header .meta{margin-top:14px;display:flex;gap:18px;flex-wrap:wrap;font-size:13px}
+  header .meta span{display:inline-flex;align-items:center;gap:6px}
+  header .meta span::before{content:"";width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.7)}
+
+  /* Tabs */
+  .tabs{
+    display:flex;gap:6px;margin:22px 0 18px;flex-wrap:wrap;
+    background:var(--surface);padding:6px;border-radius:12px;
+    border:1px solid var(--line);box-shadow:0 1px 2px rgba(42,30,26,.03);
+    position:sticky;top:8px;z-index:10;
+  }
+  .tab{
+    border:none;background:transparent;cursor:pointer;
+    padding:9px 16px;border-radius:8px;font-size:13px;font-weight:600;
+    color:var(--ink-soft);transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+  }
+  .tab:hover{background:var(--bg);color:var(--ink)}
+  .tab.active{background:var(--primary);color:#fff;box-shadow:0 2px 8px rgba(168,71,46,.25)}
+
+  /* Section */
+  .section{display:none;animation:fade .35s ease}
+  .section.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+  h2.title{font-size:18px;font-weight:700;margin:4px 0 2px;letter-spacing:-.2px}
+  p.subtitle{font-size:13px;color:var(--ink-soft);margin:0 0 16px}
+
+  /* KPI Grid */
+  .kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+  .kpi{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden;
+  }
+  .kpi .label{font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft);font-weight:600}
+  .kpi .value{font-size:26px;font-weight:700;margin-top:6px;letter-spacing:-.5px}
+  .kpi .delta{font-size:12px;margin-top:6px;display:inline-flex;align-items:center;gap:4px;color:var(--ink-soft)}
+  .kpi .delta.up{color:var(--good)}
+  .kpi .delta.down{color:var(--danger)}
+  .kpi .accent-bar{position:absolute;left:0;top:0;bottom:0;width:4px}
+  .kpi.terracotta .accent-bar{background:var(--primary)}
+  .kpi.sage .accent-bar{background:var(--accent)}
+  .kpi.gold .accent-bar{background:var(--gold)}
+  .kpi.plum .accent-bar{background:var(--plum)}
+  .kpi.danger .accent-bar{background:var(--danger)}
+
+  /* Cards */
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+    padding:20px;box-shadow:var(--shadow);
+  }
+  .card h3{font-size:14px;font-weight:700;margin:0 0 4px}
+  .card .hint{font-size:12px;color:var(--ink-soft);margin:0 0 14px}
+
+  .grid-2{display:grid;grid-template-columns:1.4fr 1fr;gap:16px;margin-bottom:16px}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:16px}
+  .grid-2-eq{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+
+  .chart-box{position:relative;height:280px}
+  .chart-box.tall{height:340px}
+  .chart-box.short{height:220px}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{
+    text-align:left;font-size:11px;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--ink-soft);font-weight:600;padding:10px 12px;border-bottom:1px solid var(--line);
+    background:var(--bg);
+  }
+  td{padding:11px 12px;border-bottom:1px solid var(--line)}
+  tbody tr:hover{background:var(--bg)}
+  .num{text-align:right;font-variant-numeric:tabular-nums}
+  .pos{color:var(--good);font-weight:600}
+  .neg{color:var(--danger);font-weight:600}
+  .pill{
+    display:inline-block;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600;
+  }
+  .pill.terracotta{background:var(--primary-soft);color:var(--primary)}
+  .pill.sage{background:var(--accent-soft);color:var(--accent)}
+  .pill.gold{background:var(--gold-soft);color:var(--gold)}
+  .pill.plum{background:var(--plum-soft);color:var(--plum)}
+  .pill.danger{background:var(--danger-soft);color:var(--danger)}
+
+  /* Progress bars */
+  .bar-track{background:var(--line);height:8px;border-radius:99px;overflow:hidden;margin-top:6px}
+  .bar-fill{height:100%;border-radius:99px;transition:width .6s ease}
+  .progress-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:13px}
+  .progress-row .name{flex:0 0 140px;font-weight:600}
+  .progress-row .bar{flex:1}
+  .progress-row .val{flex:0 0 70px;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+
+  /* Insight callouts */
+  .insight{
+    background:linear-gradient(135deg,#FFFBF3, #FFF7E8);
+    border-left:3px solid var(--gold);
+    border-radius:8px;padding:12px 16px;font-size:13px;margin-bottom:10px;
+  }
+  .insight strong{color:var(--primary)}
+  .insight.danger{background:linear-gradient(135deg,#FFF5F5,#FFEDED);border-color:var(--danger)}
+  .insight.danger strong{color:var(--danger)}
+  .insight.good{background:linear-gradient(135deg,#F4FAF4,#E8F2E8);border-color:var(--good)}
+  .insight.good strong{color:var(--good)}
+
+  /* Risk grid */
+  .risk-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;
+    border-top:3px solid var(--danger);
+  }
+  .risk-card h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .risk-num{
+    width:22px;height:22px;border-radius:50%;background:var(--danger-soft);color:var(--danger);
+    font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;
+  }
+  .risk-card p{margin:0;font-size:13px;color:var(--ink-soft)}
+
+  /* Recommendation card */
+  .rec-card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;
+    border-top:3px solid var(--accent);
+  }
+  .rec-card h4{margin:0 0 6px;font-size:14px;display:flex;align-items:center;gap:8px}
+  .rec-num{
+    width:22px;height:22px;border-radius:50%;background:var(--accent-soft);color:var(--accent);
+    font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;
+  }
+  .rec-card p{margin:0;font-size:13px;color:var(--ink-soft)}
+
+  /* Filter chips */
+  .chips{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap}
+  .chip{
+    border:1px solid var(--line);background:var(--surface);cursor:pointer;
+    padding:6px 12px;border-radius:99px;font-size:12px;font-weight:600;color:var(--ink-soft);
+    transition:all .15s;
+  }
+  .chip:hover{border-color:var(--primary);color:var(--primary)}
+  .chip.active{background:var(--primary);color:#fff;border-color:var(--primary)}
+
+  /* Stat callout */
+  .stat-block{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;text-align:center;
+  }
+  .stat-block .big{font-size:28px;font-weight:700;letter-spacing:-.5px}
+  .stat-block .lbl{font-size:12px;color:var(--ink-soft);margin-top:4px}
+  .stat-block.terracotta .big{color:var(--primary)}
+  .stat-block.sage .big{color:var(--accent)}
+  .stat-block.gold .big{color:var(--gold)}
+  .stat-block.plum .big{color:var(--plum)}
+
+  /* Footer */
+  footer{
+    margin-top:30px;padding:20px;text-align:center;font-size:12px;color:var(--ink-soft);
+    border-top:1px solid var(--line);
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:#D8C8B8;border-radius:99px}
+  ::-webkit-scrollbar-track{background:transparent}
+
+  /* Responsive */
+  @media(max-width:980px){
+    .kpi-grid{grid-template-columns:repeat(2,1fr)}
+    .grid-2,.grid-3,.grid-2-eq{grid-template-columns:1fr}
+  }
+  @media(max-width:520px){
+    .kpi-grid{grid-template-columns:1fr}
+    .wrap{padding:18px 12px 60px}
+    header{padding:22px 20px}
+    header h1{font-size:22px}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header -->
+  <header>
+    <div class="eyebrow">Business Analysis · Sep 2025 – Sep 2026</div>
+    <h1>IndieCraft · Performance Dashboard</h1>
+    <div class="sub">Handcrafted bags, charms & accessories — at-a-glance view of sales, profit, customers and pricing</div>
+    <div class="meta">
+      <span>79 orders</span>
+      <span>191 units sold</span>
+      <span>46 customers</span>
+      <span>37 products</span>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-tab="overview">Overview</button>
+    <button class="tab" data-tab="products">Products & Categories</button>
+    <button class="tab" data-tab="trends">Monthly Trends</button>
+    <button class="tab" data-tab="customers">Customers</button>
+    <button class="tab" data-tab="pricing">Pricing & Discounts</button>
+    <button class="tab" data-tab="delivery">Delivery</button>
+    <button class="tab" data-tab="risks">Risks & Actions</button>
+  </div>
+
+  <!-- ============ OVERVIEW ============ -->
+  <section class="section active" id="overview">
+    <h2 class="title">Executive Summary</h2>
+    <p class="subtitle">₹20,775 of sales turned into ₹14,534 of profit — a 70% margin.</p>
+
+    <div class="kpi-grid">
+      <div class="kpi terracotta">
+        <div class="accent-bar"></div>
+        <div class="label">Sales Revenue</div>
+        <div class="value">₹20,775</div>
+        <div class="delta up">▲ 70% margin retained</div>
+      </div>
+      <div class="kpi sage">
+        <div class="accent-bar"></div>
+        <div class="label">Total Profit</div>
+        <div class="value">₹14,534</div>
+        <div class="delta">After product cost & delivery</div>
+      </div>
+      <div class="kpi gold">
+        <div class="accent-bar"></div>
+        <div class="label">Product Cost</div>
+        <div class="value">₹6,529</div>
+        <div class="delta">31% of sales</div>
+      </div>
+      <div class="kpi plum">
+        <div class="accent-bar"></div>
+        <div class="label">Avg Profit / Order</div>
+        <div class="value">₹184</div>
+        <div class="delta">Median: ₹119</div>
+      </div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi terracotta">
+        <div class="accent-bar"></div>
+        <div class="label">Profit / Unit</div>
+        <div class="value">₹76</div>
+        <div class="delta">191 units sold</div>
+      </div>
+      <div class="kpi sage">
+        <div class="accent-bar"></div>
+        <div class="label">Repeat Customers</div>
+        <div class="value">11<span style="font-size:14px;color:var(--ink-soft)">/46</span></div>
+        <div class="delta up">Bring 71% of profit</div>
+      </div>
+      <div class="kpi gold">
+        <div class="accent-bar"></div>
+        <div class="label">Discounts Given</div>
+        <div class="value">₹1,058</div>
+        <div class="delta down">6.8% of pre-discount profit</div>
+      </div>
+      <div class="kpi plum">
+        <div class="accent-bar"></div>
+        <div class="label">Top Customer Share</div>
+        <div class="value">34%</div>
+        <div class="delta down">Of total profit</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Profit by Category</h3>
+        <p class="hint">Bags carry the money — 42% of product profit from just 5% of units.</p>
+        <div class="chart-box"><canvas id="catProfitChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Profit Concentration</h3>
+        <p class="hint">Profit depends on very few customers.</p>
+        <div class="chart-box"><canvas id="concentrationChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="grid-2-eq">
+      <div class="card">
+        <h3>What's working</h3>
+        <p class="hint">Strengths to lean into</p>
+        <div class="insight good"><strong>Charms are the most profitable per unit.</strong> Keychains & Charms earn ₹98 profit/unit at 84% margin — matched Bloom Series profit from 30 units vs 111.</div>
+        <div class="insight good"><strong>Bags still carry the money.</strong> ₹5,958 of profit, ₹3,889 from one customer.</div>
+        <div class="insight good"><strong>₹100 delivery fee covers real cost</strong> (₹47–₹90, avg ₹64) every time — ₹288 extra across 9 deliveries.</div>
+      </div>
+      <div class="card">
+        <h3>What needs attention</h3>
+        <p class="hint">Risks and gaps to address</p>
+        <div class="insight danger"><strong>Profit depends on a few customers.</strong> Top customer = 34%, top 3 = 55%, top 5 = 64%.</div>
+        <div class="insight danger"><strong>High-volume Bloom items earn little.</strong> Pure Petal & Sun Kissed Bloom: 54–55% margin, only ~₹18 profit/unit.</div>
+        <div class="insight danger"><strong>No invoices after 1 Sep 2026.</strong> Confirm whether sales paused or invoices are missing.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRODUCTS ============ -->
+  <section class="section" id="products">
+    <h2 class="title">Products & Categories</h2>
+    <p class="subtitle">Categories are grouped by product name. Profit = product profit only (delivery extra excluded).</p>
+
+    <div class="chips" id="catChips">
+      <button class="chip active" data-cat="all">All Categories</button>
+      <button class="chip" data-cat="Bags & Totes">Bags & Totes</button>
+      <button class="chip" data-cat="Bloom Series">Bloom Series</button>
+      <button class="chip" data-cat="Keychains & Charms">Keychains & Charms</button>
+      <button class="chip" data-cat="Hair & Fashion Accessories">Hair & Fashion</button>
+      <button class="chip" data-cat="Home Decor">Home Decor</button>
+      <button class="chip" data-cat="Jewellery">Jewellery</button>
+    </div>
+
+    <div class="grid-3">
+      <div class="stat-block terracotta"><div class="big">37</div><div class="lbl">Products tracked</div></div>
+      <div class="stat-block sage"><div class="big">58%</div><div class="lbl">Units from top 5 products</div></div>
+      <div class="stat-block gold"><div class="big">₹98</div><div class="lbl">Best profit/unit (Charms)</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Category Performance</h3>
+        <p class="hint">Units, sales, profit and margin by category</p>
+        <div style="max-height:360px;overflow:auto">
+        <table id="catTable">
+          <thead>
+            <tr>
+              <th>Category</th><th class="num">Units</th><th class="num">Sales ₹</th>
+              <th class="num">Profit ₹</th><th class="num">Margin</th><th class="num">Profit/Unit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="pill terracotta">Bags & Totes</span></td><td class="num">10</td><td class="num">9,227</td><td class="num pos">5,958</td><td class="num pos">65%</td><td class="num">596</td></tr>
+            <tr><td><span class="pill plum">Bloom Series</span></td><td class="num">111</td><td class="num">4,698</td><td class="num">2,948</td><td class="num">63%</td><td class="num">27</td></tr>
+            <tr><td><span class="pill gold">Keychains & Charms</span></td><td class="num">30</td><td class="num">3,522</td><td class="num pos">2,942</td><td class="num pos">84%</td><td class="num">98</td></tr>
+            <tr><td><span class="pill sage">Hair & Fashion Acc.</span></td><td class="num">34</td><td class="num">2,159</td><td class="num">1,604</td><td class="num">74%</td><td class="num">47</td></tr>
+            <tr><td><span class="pill plum">Home Decor</span></td><td class="num">1</td><td class="num">769</td><td class="num">494</td><td class="num">64%</td><td class="num">494</td></tr>
+            <tr><td><span class="pill gold">Jewellery</span></td><td class="num">3</td><td class="num">300</td><td class="num">230</td><td class="num">77%</td><td class="num">77</td></tr>
+            <tr><td><span class="pill">Unspecified</span></td><td class="num">2</td><td class="num">100</td><td class="num">70</td><td class="num">70%</td><td class="num">35</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Units vs Profit Share</h3>
+        <p class="hint">Bloom makes 58% of units but only 21% of profit. Charms do the opposite.</p>
+        <div class="chart-box"><canvas id="unitsVsProfitChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Top 10 Products by Profit</h3>
+      <p class="hint">Top 3 = 40% of product profit · Top 5 = 52%</p>
+      <div style="max-height:420px;overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th><th>Product</th><th class="num">Units</th>
+            <th class="num">Sales ₹</th><th class="num">Profit ₹</th><th class="num">Margin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>Lustra Pearl Bag</td><td class="num">4</td><td class="num">5,009</td><td class="num pos">3,209</td><td class="num pos">64%</td></tr>
+          <tr><td>2</td><td>Pearl Bead Bag</td><td class="num">2</td><td class="num">1,999</td><td class="num pos">1,365</td><td class="num pos">68%</td></tr>
+          <tr><td>3</td><td>Lavender Loop</td><td class="num">40</td><td class="num">1,782</td><td class="num">1,182</td><td class="num">66%</td></tr>
+          <tr><td>4</td><td>Ivory Pearl Bag</td><td class="num">1</td><td class="num">1,200</td><td class="num">865</td><td class="num pos">72%</td></tr>
+          <tr><td>5</td><td>Virat Cricket Charm</td><td class="num">12</td><td class="num">990</td><td class="num">810</td><td class="num pos">82%</td></tr>
+          <tr><td>6</td><td>Bal Ganesha Keychain</td><td class="num">3</td><td class="num">850</td><td class="num">760</td><td class="num pos">89%</td></tr>
+          <tr><td>7</td><td>The Bloom Collection</td><td class="num">25</td><td class="num">1,050</td><td class="num">675</td><td class="num">64%</td></tr>
+          <tr><td>8</td><td>Hangin' Spidey</td><td class="num">4</td><td class="num">700</td><td class="num">600</td><td class="num pos">86%</td></tr>
+          <tr><td>9</td><td>Bloom Chakra Toran</td><td class="num">1</td><td class="num">769</td><td class="num">494</td><td class="num">64%</td></tr>
+          <tr><td>10</td><td>Rosy Twist</td><td class="num">8</td><td class="num">629</td><td class="num">469</td><td class="num pos">75%</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="grid-2-eq" style="margin-top:16px">
+      <div class="card">
+        <h3>Lowest Margin Items</h3>
+        <p class="hint">All one-off sales — pricing needs review</p>
+        <table>
+          <thead><tr><th>Product</th><th class="num">Margin</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td>Lustreline Choker</td><td class="num neg">20%</td><td>Sold ₹50, list ₹150, cost ₹40</td></tr>
+            <tr><td>MiraPearl Mini</td><td class="num neg">44%</td><td>One-off</td></tr>
+            <tr><td>Red Blossom</td><td class="num neg">48%</td><td>One-off</td></tr>
+            <tr><td>Huggy Panda Tote</td><td class="num neg">50%</td><td>One-off</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Customization vs Standard</h3>
+        <p class="hint">Customization priced same as standard — your time isn't counted</p>
+        <div class="grid-3" style="margin:0">
+          <div class="stat-block terracotta"><div class="big">66%</div><div class="lbl">Custom margin</div></div>
+          <div class="stat-block gold"><div class="big">42</div><div class="lbl">Custom units</div></div>
+          <div class="stat-block sage"><div class="big">₹1,232</div><div class="lbl">Custom profit</div></div>
+        </div>
+        <div class="insight" style="margin-top:14px;margin-bottom:0">
+          A ₹10 customization fee on 42 units would add <strong>₹420</strong> in profit.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Items Sold Below List Price</h3>
+      <p class="hint">23 invoice lines / 27 units sold below today's Price List — ~₹1,539 lost price before discounts.</p>
+      <div class="insight danger" style="margin-bottom:0">
+        <strong>₹901 of that loss</strong> is from 3 Lustra Pearl Bags sold at ₹1,199–₹1,200 vs ₹1,500 list price today.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TRENDS ============ -->
+  <section class="section" id="trends">
+    <h2 class="title">Monthly Trends</h2>
+    <p class="subtitle">Jan–Mar made 49% of all profit · Feb alone contributed ~₹4,398 (boosted by a single ₹3,400 bag order)</p>
+
+    <div class="kpi-grid">
+      <div class="kpi terracotta">
+        <div class="accent-bar"></div>
+        <div class="label">Best Month</div>
+        <div class="value">Feb 2026</div>
+        <div class="delta up">₹4,398 profit</div>
+      </div>
+      <div class="kpi sage">
+        <div class="accent-bar"></div>
+        <div class="label">Avg Monthly Profit</div>
+        <div class="value">₹1,600</div>
+        <div class="delta">Jan–Aug average</div>
+      </div>
+      <div class="kpi gold">
+        <div class="accent-bar"></div>
+        <div class="label">Typical Order</div>
+        <div class="value">₹125</div>
+        <div class="delta">66% invoices have 1 line</div>
+      </div>
+      <div class="kpi plum">
+        <div class="accent-bar"></div>
+        <div class="label">Jul Rebound</div>
+        <div class="value">₹1,708</div>
+        <div class="delta up">New customers + charms</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Monthly Sales vs Profit</h3>
+      <p class="hint">Profit includes delivery extra — July's profit is unusually close to its sales.</p>
+      <div class="chart-box tall"><canvas id="monthlyChart"></canvas></div>
+    </div>
+
+    <div class="grid-2-eq" style="margin-top:16px">
+      <div class="card">
+        <h3>Profit Mix Over Time</h3>
+        <p class="hint">Jan–Mar: Bags 48%, Bloom 35%. Since June: Charms 80%.</p>
+        <div class="chart-box"><canvas id="mixChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Monthly Detail</h3>
+        <div style="max-height:340px;overflow:auto">
+        <table>
+          <thead><tr><th>Month</th><th class="num">Orders</th><th class="num">Sales ₹</th><th class="num">Profit ₹</th></tr></thead>
+          <tbody>
+            <tr><td>Sep 2025</td><td class="num">1</td><td class="num">1,109</td><td class="num">659</td></tr>
+            <tr><td>Oct 2025</td><td class="num">1</td><td class="num">999</td><td class="num">682</td></tr>
+            <tr><td>Nov 2025</td><td class="num">1</td><td class="num">269</td><td class="num">119</td></tr>
+            <tr><td>Dec 2025</td><td class="num">0</td><td class="num">0</td><td class="num">0</td></tr>
+            <tr><td>Jan 2026</td><td class="num">14</td><td class="num">2,249</td><td class="num">1,439</td></tr>
+            <tr style="background:var(--primary-soft)"><td><strong>Feb 2026</strong></td><td class="num">15</td><td class="num">6,900</td><td class="num pos">4,398</td></tr>
+            <tr><td>Mar 2026</td><td class="num">10</td><td class="num">1,999</td><td class="num">1,299</td></tr>
+            <tr><td>Apr 2026</td><td class="num">9</td><td class="num">1,265</td><td class="num">925</td></tr>
+            <tr><td>May 2026</td><td class="num">3</td><td class="num">1,590</td><td class="num">1,145</td></tr>
+            <tr><td>Jun 2026</td><td class="num">6</td><td class="num">880</td><td class="num">655</td></tr>
+            <tr><td>Jul 2026</td><td class="num">13</td><td class="num">1,740</td><td class="num pos">1,708</td></tr>
+            <tr><td>Aug 2026</td><td class="num">5</td><td class="num">1,675</td><td class="num">1,420</td></tr>
+            <tr><td>Sep 2026</td><td class="num">1</td><td class="num">100</td><td class="num">85</td></tr>
+          </tbody>
+        </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Retention by First-Order Month</h3>
+      <p class="hint">Repeat orders come quickly or not at all — median gap = 14 days.</p>
+      <div class="chart-box short"><canvas id="retentionChart"></canvas></div>
+    </div>
+  </section>
+
+  <!-- ============ CUSTOMERS ============ -->
+  <section class="section" id="customers">
+    <h2 class="title">Customers</h2>
+    <p class="subtitle">11 repeat customers bring 71% of profit · 35 of 46 bought only once</p>
+
+    <div class="grid-3">
+      <div class="stat-block terracotta"><div class="big">46</div><div class="lbl">Total customers</div></div>
+      <div class="stat-block sage"><div class="big">11</div><div class="lbl">Repeat customers</div></div>
+      <div class="stat-block gold"><div class="big">71%</div><div class="lbl">Profit from repeats</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Profit by Top Customers</h3>
+        <p class="hint">Top customer = 34% of total profit · Top 5 = 64%</p>
+        <div class="chart-box tall"><canvas id="customerChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Profit Concentration</h3>
+        <p class="hint">How much profit comes from the top N customers</p>
+        <div style="margin-top:8px">
+          <div class="progress-row">
+            <span class="name">Top 1</span>
+            <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:34%;background:var(--primary)"></div></div></div>
+            <span class="val">34%</span>
+          </div>
+          <div class="progress-row">
+            <span class="name">Top 3</span>
+            <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:55%;background:var(--gold)"></div></div></div>
+            <span class="val">55%</span>
+          </div>
+          <div class="progress-row">
+            <span class="name">Top 5</span>
+            <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:64%;background:var(--accent)"></div></div></div>
+            <span class="val">64%</span>
+          </div>
+          <div class="progress-row">
+            <span class="name">Top 11 (repeat)</span>
+            <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:71%;background:var(--plum)"></div></div></div>
+            <span class="val">71%</span>
+          </div>
+        </div>
+        <div class="insight danger" style="margin-top:14px;margin-bottom:0">
+          <strong>Retention is the weak spot.</strong> 35 of 46 customers bought only once.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Top Customer Profiles</h3>
+      <p class="hint">Two distinct repeat patterns: high-ticket vs frequent small-ticket</p>
+      <div style="max-height:380px;overflow:auto">
+      <table>
+        <thead>
+          <tr><th>Customer</th><th class="num">Profit ₹</th><th class="num">% of Total</th><th class="num">Orders</th><th>Margin</th><th>Pattern</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Sharmishtha Jagtap</strong></td>
+            <td class="num pos">4,954</td><td class="num">34%</td><td class="num">11</td>
+            <td><span class="pill sage">67%</span></td>
+            <td>High-ticket buyer (mainly bags)</td>
+          </tr>
+          <tr>
+            <td><strong>Chaitali Karjekar</strong></td>
+            <td class="num pos">1,865</td><td class="num">13%</td><td class="num">12</td>
+            <td><span class="pill sage">66%</span></td>
+            <td>Frequent small-ticket · most discounts</td>
+          </tr>
+          <tr>
+            <td><strong>Savali Parte</strong></td>
+            <td class="num">1,175</td><td class="num">8%</td><td class="num">2</td>
+            <td><span class="pill">—</span></td>
+            <td>Bulk buyer</td>
+          </tr>
+          <tr>
+            <td>Pramila Sawant</td>
+            <td class="num">750</td><td class="num">5%</td><td class="num">1</td>
+            <td><span class="pill">—</span></td>
+            <td>One big order</td>
+          </tr>
+          <tr>
+            <td>Sayali Sakpal</td>
+            <td class="num">605</td><td class="num">4%</td><td class="num">1</td>
+            <td><span class="pill">—</span></td>
+            <td>One big order</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+
+    <div class="grid-2-eq" style="margin-top:16px">
+      <div class="card">
+        <h3>Retention Gap</h3>
+        <p class="hint">Median days between a repeat customer's orders</p>
+        <div class="stat-block terracotta" style="border:1px solid var(--line);box-shadow:none">
+          <div class="big">14 days</div>
+          <div class="lbl">Median repeat gap</div>
+        </div>
+        <div class="insight good" style="margin-top:14px;margin-bottom:0">
+          Follow up repeat buyers <strong>about 2 weeks</strong> after each order — start with Jul–Aug customers who haven't returned.
+        </div>
+      </div>
+      <div class="card">
+        <h3>First-Order Month Retention</h3>
+        <p class="hint">Share of customers from each month who came back</p>
+        <div class="progress-row">
+          <span class="name">January</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:36%;background:var(--accent)"></div></div></div>
+          <span class="val">36%</span>
+        </div>
+        <div class="progress-row">
+          <span class="name">February</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:29%;background:var(--gold)"></div></div></div>
+          <span class="val">29%</span>
+        </div>
+        <div class="progress-row">
+          <span class="name">March</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:14%;background:var(--primary)"></div></div></div>
+          <span class="val">14%</span>
+        </div>
+        <div class="progress-row">
+          <span class="name">July (9 cust.)</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:0%;background:var(--danger)"></div></div></div>
+          <span class="val neg">0%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRICING ============ -->
+  <section class="section" id="pricing">
+    <h2 class="title">Pricing & Discounts</h2>
+    <p class="subtitle">Discounts cost ₹1,058 over 16 orders — about 6.8% of profit before discounts</p>
+
+    <div class="grid-3">
+      <div class="stat-block terracotta"><div class="big">₹1,058</div><div class="lbl">Total discounts</div></div>
+      <div class="stat-block gold"><div class="big">16</div><div class="lbl">Discounted orders</div></div>
+      <div class="stat-block plum"><div class="big">6.8%</div><div class="lbl">Of pre-discount profit</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Discounted vs Non-Discounted Orders</h3>
+        <p class="hint">Discounted orders earn ~62% margin vs 73% without</p>
+        <div class="chart-box"><canvas id="discChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Who Gets the Discounts?</h3>
+        <p class="hint">One customer takes most of it</p>
+        <div class="insight" style="margin-bottom:10px">
+          <strong>Chaitali Karjekar</strong> received 12 of 16 discounted orders (₹589). She still earned ₹1,865 profit at 66% margin.
+        </div>
+        <div class="insight danger" style="margin-bottom:0">
+          <strong>No visible discount rule.</strong> Percentages range from 6.25% to 23% — totals land on round numbers, suggesting discounts set to hit a target price.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Price Inconsistency Across Same Products</h3>
+      <p class="hint">Invoices don't record size/variant — intentional price rises can't be told apart from different versions.</p>
+      <table>
+        <thead><tr><th>Product</th><th class="num">Price 1</th><th class="num">Price 2</th><th class="num">Price 3</th></tr></thead>
+        <tbody>
+          <tr><td>Lustra Pearl Bag</td><td class="num">₹1,199</td><td class="num">₹1,200</td><td class="num">₹1,500</td></tr>
+          <tr><td>Bal Ganesha Keychain</td><td class="num">₹200</td><td class="num">₹300</td><td class="num">₹350</td></tr>
+          <tr><td>Flora Bloom</td><td class="num">₹30</td><td class="num">₹40</td><td class="num">₹50</td></tr>
+          <tr><td>Pastel Petal Clip</td><td class="num">₹30</td><td class="num">₹40</td><td class="num">₹50</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="grid-2-eq" style="margin-top:16px">
+      <div class="card">
+        <h3>Lost Price (Below List)</h3>
+        <p class="hint">23 invoice lines · 27 units sold below today's Price List</p>
+        <div class="stat-block terracotta" style="border:1px solid var(--line);box-shadow:none">
+          <div class="big">₹1,539</div>
+          <div class="lbl">Lost price before discounts</div>
+        </div>
+        <div class="insight danger" style="margin-top:14px;margin-bottom:0">
+          ₹901 of that loss is from 3 Lustra Pearl Bags sold at ₹1,199–₹1,200 vs ₹1,500 list price.
+        </div>
+      </div>
+      <div class="card">
+        <h3>Recommended Discount Rule</h3>
+        <p class="hint">By category margin tolerance</p>
+        <div class="progress-row">
+          <span class="name">Bloom items</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:80%;background:var(--gold)"></div></div></div>
+          <span class="val">20% OK</span>
+        </div>
+        <div class="progress-row">
+          <span class="name">Charms</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:80%;background:var(--accent)"></div></div></div>
+          <span class="val">20% OK</span>
+        </div>
+        <div class="progress-row">
+          <span class="name">Bags</span>
+          <div class="bar"><div class="bar-track"><div class="bar-fill" style="width:30%;background:var(--primary)"></div></div></div>
+          <span class="val">Smaller</span>
+        </div>
+        <div class="insight good" style="margin-top:14px;margin-bottom:0">
+          Review discounts <strong>monthly against profit</strong>, not against revenue.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DELIVERY ============ -->
+  <section class="section" id="delivery">
+    <h2 class="title">Delivery</h2>
+    <p class="subtitle">₹100 fee covers real cost every time — but a major data gap exists</p>
+
+    <div class="kpi-grid">
+      <div class="kpi terracotta">
+        <div class="accent-bar"></div>
+        <div class="label">Fee Charged (9 deliveries)</div>
+        <div class="value">₹860</div>
+        <div class="delta">Across 9 paid deliveries</div>
+      </div>
+      <div class="kpi sage">
+        <div class="accent-bar"></div>
+        <div class="label">Real Courier Cost</div>
+        <div class="value">₹572</div>
+        <div class="delta">Range ₹47–₹90 · avg ₹64</div>
+      </div>
+      <div class="kpi gold">
+        <div class="accent-bar"></div>
+        <div class="label">Extra Earned</div>
+        <div class="value">₹288</div>
+        <div class="delta up">~₹32 per delivery</div>
+      </div>
+      <div class="kpi danger">
+        <div class="accent-bar"></div>
+        <div class="label">Orders w/o Fee Recorded</div>
+        <div class="value">70<span style="font-size:14px;color:var(--ink-soft)">/79</span></div>
+        <div class="delta down">Delivery cost not recorded</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h3>Delivery: Fee vs Real Cost</h3>
+        <p class="hint">₹100 covers the highest real cost (₹90) every time</p>
+        <div class="chart-box"><canvas id="deliveryChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Outstation Orders</h3>
+        <p class="hint">8 outstation orders — 6 on 7 July alone</p>
+        <div class="stat-block plum" style="border:1px solid var(--line);box-shadow:none">
+          <div class="big">₹140</div>
+          <div class="lbl">Avg profit / outstation order (vs ₹189 local)</div>
+        </div>
+        <div class="insight danger" style="margin-top:14px;margin-bottom:0">
+          A ₹85 charm costs <strong>₹185 delivered</strong> — most outstation orders were single charms.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Data Quality Alert</h3>
+      <p class="hint">70 of 79 orders had no delivery fee and no cost recorded</p>
+      <div class="insight danger" style="margin-bottom:0">
+        <strong>If any of these 70 were couriered, profit is overstated.</strong> Record the real cost of every delivery — including free ones.
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RISKS & ACTIONS ============ -->
+  <section class="section" id="risks">
+    <h2 class="title">Risks & Recommendations</h2>
+    <p class="subtitle">Six risks identified · Eight recommendations to act on</p>
+
+    <div class="card" style="margin-bottom:16px">
+      <h3>Key Risks</h3>
+      <p class="hint">Threats to current profit health</p>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:8px" id="riskGrid">
+        <div class="risk-card">
+          <h4><span class="risk-num">1</span> Profit Concentration</h4>
+          <p>One customer is 34% of profit and most of the bag business.</p>
+        </div>
+        <div class="risk-card">
+          <h4><span class="risk-num">2</span> Best-Sellers Earn Least</h4>
+          <p>Pure Petal & Sun Kissed Bloom (33 units) earned only ₹595 total.</p>
+        </div>
+        <div class="risk-card">
+          <h4><span class="risk-num">3</span> Price Inconsistency</h4>
+          <p>Items sold below list price · 20% margin on one choker.</p>
+        </div>
+        <div class="risk-card">
+          <h4><span class="risk-num">4</span> Profit Overstated</h4>
+          <p>Labour, packaging, ads and free-delivery costs not counted.</p>
+        </div>
+        <div class="risk-card">
+          <h4><span class="risk-num">5</span> No Stock Visibility</h4>
+          <p>Cannot see what is made, sold, reserved or left.</p>
+        </div>
+        <div class="risk-card">
+          <h4><span class="risk-num">6</span> Possible Data Gap</h4>
+          <p>No invoices after 1 Sep 2026 — needs confirmation.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Recommendations</h3>
+      <p class="hint">Actionable steps to grow profit and reduce risk</p>
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:8px">
+        <div class="rec-card">
+          <h4><span class="rec-num">1</span> Confirm Sep 2026 invoices</h4>
+          <p>Load any invoices after 1 Sep so the dashboard reflects the current position.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">2</span> Lean into charms</h4>
+          <p>Best profit/unit (₹98) & highest margins (Bal Ganesha 89%, Spidey 86%, Virat 82%). Add new characters, test 3-charm bundles.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">3</span> Fix thin Bloom items</h4>
+          <p>Test ₹60 or sell in packs. Add a ₹10 customization fee on 42 units → +₹420.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">4</span> Hold list prices</h4>
+          <p>Check Lustreline Choker (₹50 vs ₹150 list). Rule: never sell below cost + 50%.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">5</span> Make discounts follow margin</h4>
+          <p>Bloom & charms can afford 20% off (stays near 60%). Bags: smaller discounts. Review monthly vs profit.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">6</span> Keep ₹100 outstation fee</h4>
+          <p>Covers highest real cost (₹90). Bundle/minimum order so a single ₹85 charm doesn't carry ₹100 delivery. Record every delivery cost.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">7</span> Follow up repeat buyers</h4>
+          <p>Nudge ~2 weeks after each order. Start with Jul–Aug customers who haven't returned.</p>
+        </div>
+        <div class="rec-card">
+          <h4><span class="rec-num">8</span> Record true costs</h4>
+          <p>Packaging, labour time, ad spend — so the report shows true net profit.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:16px">
+      <h3>Product Roadmap · Inventory & Stock</h3>
+      <p class="hint">Why it's worth building — and how to start</p>
+      <div class="grid-2-eq">
+        <div>
+          <div class="insight good" style="margin-bottom:10px">
+            <strong>Bags tie up real money.</strong> A batch of 20 Pearl Bead Bags costs ₹6,340 — about the same as all product cost sold in 12 months (₹6,529). Only 2 sold in that time.
+          </div>
+          <div class="insight good" style="margin-bottom:10px">
+            <strong>Charms are low risk.</strong> Cost ₹15–₹30 each — stock mistakes are cheap.
+          </div>
+          <div class="insight" style="margin-bottom:0">
+            <strong>Demand comes in waves.</strong> Reorder levels should use last 4–8 weeks, not lifetime sales. Pure Petal: 19 in Jan–Feb, none since March.
+          </div>
+        </div>
+        <div>
+          <h4 style="margin:0 0 10px;font-size:13px">Suggested rollout</h4>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.9">
+            <strong>Phase 1:</strong> Track ready-made standard items — all bags + top movers (Virat charm, Lavender Loop, Rosy Twist, Sunshine Bloom Clip, Cotton Candy Bow, Hangin' Spidey).<br>
+            <strong>Phase 2:</strong> Remaining products.<br>
+            <strong>Phase 3:</strong> Raw materials (beads, yarn).<br>
+            <em>Customized items (42 units) are made-to-order — do not stock.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    IndieCraft Business Analysis Dashboard · Data: Sep 2025 – Sep 2026 · 79 orders / 191 units / 46 customers<br>
+    Profit shown is before labour, packaging, advertising, rent and any cost of free deliveries.
+  </footer>
+</div>
+
+<script>
+  // ---------- Tab switching ----------
+  const tabs = document.querySelectorAll('.tab');
+  const sections = document.querySelectorAll('.section');
+  const chartsInited = new Set();
+
+  tabs.forEach(t => {
+    t.addEventListener('click', () => {
+      const target = t.dataset.tab;
+      tabs.forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      sections.forEach(s => s.classList.toggle('active', s.id === target));
+      // Lazy init charts on first view
+      initChartsFor(target);
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+  });
+
+  // ---------- Chart.js defaults ----------
+  Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif";
+  Chart.defaults.color = '#6B5B52';
+  Chart.defaults.font.size = 12;
+
+  const PALETTE = {
+    primary:'#A8472E', accent:'#3C6E47', gold:'#C8843A', plum:'#6B3A5B',
+    danger:'#B23A48', soft1:'#F4DDD2', soft2:'#DCE7DC', soft3:'#F5E3C6', soft4:'#EBD9E3'
+  };
+
+  const fmtINR = v => '₹' + Number(v).toLocaleString('en-IN');
+
+  // ---------- Charts ----------
+  function initChartsFor(tab){
+    if(tab === 'overview' && !chartsInited.has('catProfit')){
+      chartsInited.add('catProfit');
+      new Chart(document.getElementById('catProfitChart'), {
+        type:'doughnut',
+        data:{
+          labels:['Bags & Totes','Bloom Series','Keychains & Charms','Hair & Fashion','Home Decor','Jewellery','Unspecified'],
+          datasets:[{
+            data:[5958,2948,2942,1604,494,230,70],
+            backgroundColor:[PALETTE.primary,PALETTE.plum,PALETTE.gold,PALETTE.accent,PALETTE.danger,'#8B6F47','#A89684'],
+            borderWidth:0
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          cutout:'58%',
+          plugins:{
+            legend:{position:'right', labels:{boxWidth:10, font:{size:11}, padding:8}},
+            tooltip:{callbacks:{label:c => ` ${c.label}: ${fmtINR(c.raw)} (${(c.raw/14246*100).toFixed(1)}%)`}}
+          }
+        }
+      });
+
+      chartsInited.add('concentration');
+      new Chart(document.getElementById('concentrationChart'), {
+        type:'bar',
+        data:{
+          labels:['Top 1','Top 3','Top 5','Top 11 (repeats)'],
+          datasets:[{
+            label:'% of total profit',
+            data:[34,55,64,71],
+            backgroundColor:[PALETTE.primary,PALETTE.gold,PALETTE.accent,PALETTE.plum],
+            borderRadius:6, barThickness:38
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c => ` ${c.raw}% of profit`}}},
+          scales:{
+            y:{beginAtZero:true, max:100, ticks:{callback:v=>v+'%'}, grid:{color:'#ECE3D6'}},
+            x:{grid:{display:false}}
+          }
+        }
+      });
+    }
+
+    if(tab === 'products' && !chartsInited.has('unitsVsProfit')){
+      chartsInited.add('unitsVsProfit');
+      new Chart(document.getElementById('unitsVsProfitChart'), {
+        type:'bar',
+        data:{
+          labels:['Bags','Bloom','Charms','Hair & Fashion','Home','Jewellery'],
+          datasets:[
+            {label:'Units %', data:[5,58,16,18,1,2], backgroundColor:PALETTE.gold, borderRadius:4, barThickness:14},
+            {label:'Profit %', data:[42,21,21,11,3,2], backgroundColor:PALETTE.primary, borderRadius:4, barThickness:14}
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:11}}}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+          scales:{y:{beginAtZero:true, ticks:{callback:v=>v+'%'}, grid:{color:'#ECE3D6'}}, x:{grid:{display:false}}}
+        }
+      });
+    }
+
+    if(tab === 'trends' && !chartsInited.has('monthly')){
+      chartsInited.add('monthly');
+      const months = ['Sep 25','Oct 25','Nov 25','Dec 25','Jan 26','Feb 26','Mar 26','Apr 26','May 26','Jun 26','Jul 26','Aug 26','Sep 26'];
+      const sales = [1109,999,269,0,2249,6900,1999,1265,1590,880,1740,1675,100];
+      const profit = [659,682,119,0,1439,4398,1299,925,1145,655,1708,1420,85];
+      new Chart(document.getElementById('monthlyChart'), {
+        type:'bar',
+        data:{
+          labels:months,
+          datasets:[
+            {type:'bar', label:'Sales ₹', data:sales, backgroundColor:PALETTE.gold, borderRadius:5, barThickness:18},
+            {type:'bar', label:'Profit ₹', data:profit, backgroundColor:PALETTE.primary, borderRadius:5, barThickness:18}
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{position:'top', labels:{boxWidth:10, font:{size:11}}}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${fmtINR(c.raw)}`}}},
+          scales:{y:{beginAtZero:true, ticks:{callback:v=>fmtINR(v)}, grid:{color:'#ECE3D6'}}, x:{grid:{display:false}}}
+        }
+      });
+
+      chartsInited.add('mix');
+      new Chart(document.getElementById('mixChart'), {
+        type:'bar',
+        data:{
+          labels:['Jan–Mar','Jun–Sep'],
+          datasets:[
+            {label:'Bags %', data:[48,5], backgroundColor:PALETTE.primary, borderRadius:5, barThickness:30},
+            {label:'Bloom %', data:[35,5], backgroundColor:PALETTE.plum, borderRadius:5, barThickness:30},
+            {label:'Charms %', data:[5,80], backgroundColor:PALETTE.gold, borderRadius:5, barThickness:30},
+            {label:'Other %', data:[12,10], backgroundColor:PALETTE.accent, borderRadius:5, barThickness:30}
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:11}}}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}%`}}},
+          scales:{x:{stacked:true, grid:{display:false}}, y:{stacked:true, beginAtZero:true, max:100, ticks:{callback:v=>v+'%'}, grid:{color:'#ECE3D6'}}}
+        }
+      });
+
+      chartsInited.add('retention');
+      new Chart(document.getElementById('retentionChart'), {
+        type:'line',
+        data:{
+          labels:['Jan','Feb','Mar'],
+          datasets:[{
+            label:'Came back %',
+            data:[36,29,14],
+            borderColor:PALETTE.primary, backgroundColor:'rgba(168,71,46,.12)',
+            fill:true, tension:.35, pointRadius:5, pointBackgroundColor:PALETTE.primary, borderWidth:2
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${c.raw}% came back`}}},
+          scales:{y:{beginAtZero:true, max:50, ticks:{callback:v=>v+'%'}, grid:{color:'#ECE3D6'}}, x:{grid:{display:false}}}
+        }
+      });
+    }
+
+    if(tab === 'customers' && !chartsInited.has('customer')){
+      chartsInited.add('customer');
+      new Chart(document.getElementById('customerChart'), {
+        type:'bar',
+        data:{
+          labels:['Sharmishtha Jagtap','Chaitali Karjekar','Savali Parte','Pramila Sawant','Sayali Sakpal'],
+          datasets:[{
+            label:'Profit ₹',
+            data:[4954,1865,1175,750,605],
+            backgroundColor:[PALETTE.primary,PALETTE.gold,PALETTE.accent,PALETTE.plum,PALETTE.danger],
+            borderRadius:6, barThickness:30
+          }]
+        },
+        options:{
+          indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${fmtINR(c.raw)} (${(c.raw/14534*100).toFixed(1)}%)`}}},
+          scales:{x:{beginAtZero:true, ticks:{callback:v=>fmtINR(v)}, grid:{color:'#ECE3D6'}}, y:{grid:{display:false}, ticks:{font:{size:11}}}}
+        }
+      });
+    }
+
+    if(tab === 'pricing' && !chartsInited.has('disc')){
+      chartsInited.add('disc');
+      new Chart(document.getElementById('discChart'), {
+        type:'bar',
+        data:{
+          labels:['Margin %','Avg Order Profit ₹'],
+          datasets:[
+            {label:'No Discount (63 orders)', data:[73, 200], backgroundColor:PALETTE.accent, borderRadius:6, barThickness:30},
+            {label:'Discounted (16 orders)', data:[62, 130], backgroundColor:PALETTE.danger, borderRadius:6, barThickness:30}
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{position:'bottom', labels:{boxWidth:10, font:{size:11}}}, tooltip:{callbacks:{label:c=>` ${c.dataset.label}: ${c.raw}`}}},
+          scales:{y:{beginAtZero:true, grid:{color:'#ECE3D6'}}, x:{grid:{display:false}}}
+        }
+      });
+    }
+
+    if(tab === 'delivery' && !chartsInited.has('delivery')){
+      chartsInited.add('delivery');
+      new Chart(document.getElementById('deliveryChart'), {
+        type:'bar',
+        data:{
+          labels:['Fee Charged','Real Cost','Extra Earned'],
+          datasets:[{
+            data:[860,572,288],
+            backgroundColor:[PALETTE.primary, PALETTE.danger, PALETTE.accent],
+            borderRadius:6, barThickness:60
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>` ${fmtINR(c.raw)}`}}},
+          scales:{y:{beginAtZero:true, ticks:{callback:v=>fmtINR(v)}, grid:{color:'#ECE3D6'}}, x:{grid:{display:false}}}
+        }
+      });
+    }
+  }
+
+  // Init overview charts on load
+  initChartsFor('overview');
+
+  // ---------- Category filter (cosmetic, shows toast on table) ----------
+  const chips = document.querySelectorAll('#catChips .chip');
+  const catRows = document.querySelectorAll('#catTable tbody tr');
+  chips.forEach(c => {
+    c.addEventListener('click', () => {
+      chips.forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      const cat = c.dataset.cat;
+      catRows.forEach(r => {
+        const txt = r.querySelector('.pill')?.textContent.trim() || r.innerText;
+        r.style.display = (cat === 'all' || txt.includes(cat)) ? '' : 'none';
+      });
+    });
+  });
+</script>
+</body>
+</html>
