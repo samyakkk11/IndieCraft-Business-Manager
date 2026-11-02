@@ -4,6 +4,35 @@ An end-to-end business automation and analytical suite built for my first freela
 
 ---
 
+### 🔄 Project Lifecycle & Evolution
+
+#### 1. The Challenge: Messy Data & Fragmented Records
+When the client reached out, operational records were logged randomly in an unstructured format, creating severe bottlenecks in order tracking, payment verification, and invoice generation.
+
+![Unstructured Raw Data](IndieCraft_Business_Manager/images/mess.png)
+
+#### 2. Data Extraction, Structuring & Verification
+We extracted and parsed historical invoice records from PDF samples, cross-verifying entries directly with the client to establish a clean, reliable, structured baseline dataset.
+
+| Structured Data Setup | Verified Transaction Register |
+| :---: | :---: |
+| ![Structured Data Workspace](IndieCraft_Business_Manager/images/structured.png) | ![Verified Data Log](IndieCraft_Business_Manager/images/structured2.png) |
+
+#### 3. Excel VBA Automation & Invoicing Engine
+We originally engineered an automated Business Manager in Microsoft Excel using advanced VBA macros and custom formulas to auto-compile invoices matching legacy designs, track advance payments held, and sync entries directly to a master Invoice Register.
+
+| Automated PDF Invoice Generator | System Feedback & Order Alerts |
+| :---: | :---: |
+| ![Automated Invoice System](IndieCraft_Business_Manager/images/invocie.png) | ![System Automation & Feedback](IndieCraft_Business_Manager/images/feedback.png) |
+
+#### 4. Executive Dashboard & Google Sheets Migration
+To bypass Microsoft Excel licensing constraints while retaining full automation, we migrated the entire system to **Google Sheets**, translating VBA logic into **Google Apps Script**. We also built dynamic dashboards (both in-sheet and web-based) to give the client an at-a-glance operational overview.
+
+![Automated Business Manager & Dashboard](IndieCraft_Business_Manager/images/automated.png)
+![Executive Analytics Dashboard](IndieCraft_Business_Manager/images/dashboard.png)
+
+---
+
 ### 🌟 Key Features & Technical Architecture
 
 1. **Data Extraction, Structuring & Verification**
